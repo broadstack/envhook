@@ -7,6 +7,12 @@ module Envhook
     end
 
     def call
+      write_config
+    end
+
+    def write_config
+      config = JSON.parse(request.body.read)
+      Writer.new(config).write
     end
 
     private

@@ -14,9 +14,22 @@ describe "envhook" do
 
   context "with valid authentication" do
     before { authorize(username, password) }
+
+    before do
+      File.open(".env", "w") { |f| f.write('TEST_CONFIG="old")') }
+    end
+
     it "responds 200 OK" do
       post_json(path, {"TEST_CONFIG" => "updated"})
       expect(response.status).to eq(200)
+    end
+
+    it "writes .env" do
+      expect {
+        post_json(path, {"TEST_CONFIG" => "updated"})
+      }.to change {
+        File.read(".env").include?('TEST_CONFIG="updated"')
+      }.to(true)
     end
 
     it "responds 404 for an incorrect path" do
@@ -24,6 +37,7 @@ describe "envhook" do
       post(path + "/wrong")
       expect(response.status).to eq(404)
     end
+
   end
 
 end
