@@ -1,6 +1,7 @@
 require "rspec"
 require "rack/test"
 require "envhook"
+require "fakefs/spec_helpers"
 
 module EnvhookSpecHelper
 
@@ -34,4 +35,5 @@ end
 
 RSpec.configure do |rspec|
   rspec.include(EnvhookSpecHelper)
+  rspec.include(FakeFS::SpecHelpers)
 end
