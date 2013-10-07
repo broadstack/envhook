@@ -15,7 +15,7 @@ describe "envhook" do
   context "with valid authentication" do
     before { authorize(username, password) }
     it "responds 200 OK" do
-      post(path)
+      post_json(path, {"TEST_CONFIG" => "updated"})
       expect(response.status).to eq(200)
     end
 

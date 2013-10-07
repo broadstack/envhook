@@ -1,6 +1,7 @@
 require "rspec"
 require "rack/test"
 require "envhook"
+require "json"
 require "fakefs/spec_helpers"
 
 module EnvhookSpecHelper
@@ -27,6 +28,11 @@ module EnvhookSpecHelper
 
   def envhook_auth
     authorize(username, password)
+  end
+
+  def post_json(uri, data)
+    json = JSON.generate(data)
+    post(uri, json, {"CONTENT_TYPE" => "application/json"})
   end
 
   alias_method :response, :last_response
