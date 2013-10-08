@@ -21,11 +21,7 @@ module Envhook
     attr_reader :config
 
     def dot_env_path
-      ".env"
-    end
-
-    def tmp_path
-      ".tmp.env"
+      ENV.fetch("ENVHOOK_FILE", ".env")
     end
 
     def header
