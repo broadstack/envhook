@@ -24,24 +24,9 @@ module Envhook
       Dir.pwd
     end
 
-    def initialize
-      self.reexec_pid = 0
-    end
-
     # reexecutes the START_CTX with a new binary
     def reexec
-      if reexec_pid > 0
-        begin
-          # assert ability to send signals, using signal 0 (no-op).
-          Process.kill(0, reexec_pid)
-          logger.error "reexec-ed child already running PID:#{reexec_pid}"
-          return
-        rescue Errno::ESRCH # no such process
-          self.reexec_pid = 0
-        end
-      end
-
-      self.reexec_pid = fork do
+      pid = fork do
         logger.info "forked PID:#{$$} from parent PID:#{Process.ppid}"
 
         logger.info "sending SIGTERM to old process #{Process.ppid}"
@@ -57,8 +42,6 @@ module Envhook
     end
 
     private
-
-    attr_accessor :reexec_pid
 
     # The START_CTX, with modifications applied.
     def context
