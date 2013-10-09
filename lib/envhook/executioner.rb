@@ -33,17 +33,23 @@ module Envhook
       end
     end
 
+    private
+
     def reexec_parent(pid)
-      pid = $$ # self
-      signal = "INT"
-      logger.info "sending #{signal} to PID:#{pid}"
-      Process.kill(signal, pid)
     end
 
     def reexec_child
-      pid = $$
+      pid = Process.pid
+      ppid = Process.ppid
 
-      logger.info "forked PID:#{pid} from parent PID:#{$$}"
+      logger.info "forked PID:#{pid} from parent PID:#{ppid}"
+
+      signal = "TERM"
+      logger.info "sending #{signal} to PID:#{ppid}"
+      Process.kill(signal, ppid)
+
+      logger.info "waiting for PID:#{ppid} to exit"
+      wait_for_pid(ppid)
 
       logger.info "changing directory to #{context[:cwd]}"
       Dir.chdir(context[:cwd])
@@ -53,7 +59,16 @@ module Envhook
       exec(*cmd)
     end
 
-    private
+    # Wait for a process to exit (for the PID to no longer exist).
+    # Requires privileges to send a (null) signal to the pid.
+    def wait_for_pid(pid)
+      loop do
+        Process.kill(0, pid)
+        sleep(0.01)
+      end
+    rescue Errno::ESRCH
+      return
+    end
 
     # The START_CTX, with modifications applied.
     def context
