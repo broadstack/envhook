@@ -8,6 +8,7 @@ module Envhook
 
     def call
       config = parse_config
+      load_config(config)
       write_config(config)
       reload_config(config) # TODO
     end
@@ -17,6 +18,10 @@ module Envhook
     def parse_config
       # TODO: validate that keys and values are all Strings.
       JSON.parse(http_request_body)
+    end
+
+    def load_config(config)
+      config.each { |key, value| ENV[key] = value }
     end
 
     def write_config(config)
