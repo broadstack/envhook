@@ -26,19 +26,31 @@ module Envhook
 
     # reexecutes the START_CTX with a new binary
     def reexec
-      pid = fork do
-        logger.info "forked PID:#{$$} from parent PID:#{Process.ppid}"
-
-        logger.info "sending SIGTERM to old process #{Process.ppid}"
-        Process.kill("SIGTERM", Process.ppid)
-
-        logger.info "changing directory to #{context[:cwd]}"
-        Dir.chdir(context[:cwd])
-        cmd = [ context[0] ].concat(context[:argv])
-
-        logger.info "executing #{cmd.inspect} (in #{Dir.pwd})"
-        exec(*cmd)
+      if pid = fork
+        reexec_parent(pid)
+      else
+        reexec_child
       end
+    end
+
+    def reexec_parent(pid)
+      pid = $$ # self
+      signal = "INT"
+      logger.info "sending #{signal} to PID:#{pid}"
+      Process.kill(signal, pid)
+    end
+
+    def reexec_child
+      pid = $$
+
+      logger.info "forked PID:#{pid} from parent PID:#{$$}"
+
+      logger.info "changing directory to #{context[:cwd]}"
+      Dir.chdir(context[:cwd])
+      cmd = [ context[0] ].concat(context[:argv])
+
+      logger.info "executing #{cmd.inspect} (in #{Dir.pwd})"
+      exec(*cmd)
     end
 
     private
@@ -65,7 +77,7 @@ module Envhook
     def logger
       # TODO: proper logger throughout Envhook.
       @_logger ||= Class.new do
-        def info(message); puts("Envhook: " << message) end
+        def info(message); puts("Envhook[#{$$}]: " << message) end
         alias_method :error, :info
       end.new
     end
