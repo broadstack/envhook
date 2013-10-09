@@ -91,7 +91,7 @@ module Envhook
 
     def logger
       # TODO: proper logger throughout Envhook.
-      @_logger ||= Class.new do
+      @_logger ||= defined?(Rails) ? Rails.logger : Class.new do
         def info(message); puts("Envhook[#{$$}]: " << message) end
         alias_method :error, :info
       end.new
